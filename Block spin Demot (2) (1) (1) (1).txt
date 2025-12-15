@@ -238,7 +238,6 @@ task.spawn(function()
     end
 end)
 
-
 MoneyButtons.Bank = MainTab:Button({
     Title = "🏦 Bank Balance",
     Desc = "$0"
@@ -258,6 +257,62 @@ MainTab:Divider()
 
 MainTab:Section({
     Title = "Coming soon😭"
+})
+-- ========================================
+-- 🧲 AUTO PICK ITEM SYSTEM (WindUI)
+-- ========================================
+
+
+local player = Players.LocalPlayer
+local dropfolder = workspace:WaitForChild("DroppedItems")
+local Net = require(ReplicatedStorage.Modules.Core.Net)
+
+-- ⚙️ ตัวแปรควบคุม
+local AutoPickItems = false
+
+-- 🧠 หาระยะจาก HumanoidRootPart
+local function GetDistanceFromRootPart(target)
+    if not target then return math.huge end
+
+    local char = player.Character or player.CharacterAdded:Wait()
+    local root = char:FindFirstChild("HumanoidRootPart")
+    if not root then return math.huge end
+
+    return (root.Position - target.Position).Magnitude
+end
+
+-- 🧲 ฟังก์ชัน Pick Item
+local function PickItem()
+    for _, v in ipairs(dropfolder:GetChildren()) do
+        if v and not v:GetAttribute("Locked") then
+            local zone = v:FindFirstChild("PickUpZone")
+            if zone then
+                Net.get("pickup_dropped_item", v)
+            end
+        end
+    end
+end
+
+-- 🔁 Loop ทำงาน
+task.spawn(function()
+    while task.wait() do
+        if AutoPickItems then
+            PickItem()
+        end
+    end
+end)
+
+-- ========================================
+-- 🧱 WINDUI TOGGLE
+-- ========================================
+
+MainTab:Toggle({
+    Title = "Auto Pick Item",
+    Desc = "Pick up dropped items automatically",
+    Default = false,
+    Callback = function(state)
+        AutoPickItems = state
+    end
 })
 
 
@@ -1437,6 +1492,7 @@ ESPTab:Toggle({
         updateAllESPVisibility()
     end
 })
+
 
 
 
