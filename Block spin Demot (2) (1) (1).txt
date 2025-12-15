@@ -262,7 +262,59 @@ MainTab:Section({
     Title = "Module"
 })
 
+-- ========================================
+-- 🧲 AUTO PICK ITEM SYSTEM
+-- ========================================
 
+
+local player = Players.LocalPlayer
+local dropfolder = workspace:WaitForChild("DroppedItems")
+local Net = require(ReplicatedStorage.Modules.Core.Net)
+
+-- ⚙️ ตัวแปรควบคุม
+local AutoPickItems = false
+
+-- 🧠 หาระยะจาก HumanoidRootPart
+local function GetDistanceFromRootPart(target)
+    if not target then return math.huge end
+
+    local char = player.Character or player.CharacterAdded:Wait()
+    local root = char:FindFirstChild("HumanoidRootPart")
+    if not root then return math.huge end
+
+    return (root.Position - target.Position).Magnitude
+end
+
+-- 🧲 ฟังก์ชัน Pick Item
+local function PickItem()
+    for _, v in ipairs(dropfolder:GetChildren()) do
+        if v and not v:GetAttribute("Locked") then
+            local zone = v:FindFirstChild("PickUpZone")
+            if zone then
+                Net.get("pickup_dropped_item", v)
+            end
+        end
+    end
+end
+
+-- 🔁 Loop ทำงาน
+task.spawn(function()
+    while task.wait() do
+        if AutoPickItems then
+            PickItem()
+        end
+    end
+end)
+
+
+MainTab:Toggle({
+    Title = "Pick Item",
+    Desc = "Pick up items that are far away",
+    Default = false,
+    Callback = function(state)
+        AutoPickItems = state
+    end
+})
 
 local ConfigManager = Window.ConfigManager
 local myConfig = ConfigManager:CreateConfig("SilentAimConfig")
@@ -1438,6 +1490,7 @@ ESPTab:Toggle({
         updateAllESPVisibility()
     end
 })
+
 
 
 
