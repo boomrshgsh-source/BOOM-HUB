@@ -258,63 +258,58 @@ MainTab:Divider()
 MainTab:Section({
     Title = "Coming soon😭"
 })
-
+-- SERVICES
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
 
 local player = Players.LocalPlayer
-local dropfolder = workspace:WaitForChild("DroppedItems") -- เปลี่ยนชื่อตามของคุณ
+local dropfolder = workspace:WaitForChild("DroppedItems")
 
+-- 🔧 สถานะเปิด / ปิด (แทน _G)
+local AutoPickItems = false
 
--- 🧠 ฟังก์ชันหาความห่างจาก HumanoidRootPart
+-- 🧠 ฟังก์ชันวัดระยะจาก HumanoidRootPart
 local function GetDistanceFromRootPart(target)
-    if not target then
-        return math.huge
-    end
-    local char = player.Character or player.CharacterAdded:Wait()
+    local char = player.Character
+    if not char then return math.huge end
+
     local root = char:FindFirstChild("HumanoidRootPart")
-    if not root then
-        return math.huge
-    end
+    if not root or not target then return math.huge end
+
     return (root.Position - target.Position).Magnitude
 end
 
--- ⚙️ ตัวแปรควบคุมเปิดปิด
-_G.AutoPickItems = false
-
--- 🧲 ฟังก์ชันหลัก
-task.spawn(
-    function()
-        while task.wait(0) do -- ตรวจทุก 0.2 วิ (เร็วแต่ไม่หน่วง)
-            if _G.AutoPickItems then
-                for _, v in pairs(dropfolder:GetChildren()) do
-                    if v and not v:GetAttribute("Locked") then
-                        local zone = v:FindFirstChild("PickUpZone")
-                        if zone then
-                            local dist = GetDistanceFromRootPart(zone)
-                            if dist < math.huge then
-                                Net.get("pickup_dropped_item", v)
-                            end
-                        end
+-- 🧲 Loop หลัก (ทำงานเหมือนเดิม 100%)
+task.spawn(function()
+    while task.wait() do
+        if AutoPickItems then
+            for _, v in pairs(dropfolder:GetChildren()) do
+                if v and not v:GetAttribute("Locked") then
+                    local zone = v:FindFirstChild("PickUpZone")
+                    if zone then
+                        -- เหมือนของเดิม: ไม่จำกัดระยะ
+                        Net.get("pickup_dropped_item", v)
                     end
                 end
             end
         end
     end
-)
+end)
 
--- 🧱 ปุ่ม Toggle UI
-MainTab:Toggle(
-    {
-        Title = "Auto Pick Item",
-        Flag = "Pickitem",
-        Desc = "Pick up items that are far away",
-        Icon = "check",
-        Type = "Checkbox",
-        Value = false,
-        Callback = function(value)
-            _G.AutoPickItems = value
-        end
-    }
-)
+-- 🧱 Toggle UI (WindUI)
+MainTab:Toggle({
+    Title = "Auto Pick Item",
+    Flag = "Pickitem",
+    Desc = "Pick up items automatically",
+    Icon = "check",
+    Type = "Checkbox",
+    Value = false,
+    Callback = function(value)
+        AutoPickItems = value
+    end
+})
+
+
 
 local ConfigManager = Window.ConfigMnager
 local myConfig = ConfigManager:CreateConfig("SilentAimConfig")
@@ -1490,6 +1485,7 @@ ESPTab:Toggle({
         updateAllESPVisibility()
     end
 })
+
 
 
 
