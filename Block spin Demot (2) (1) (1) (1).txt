@@ -258,67 +258,65 @@ MainTab:Divider()
 MainTab:Section({
     Title = "Coming soon😭"
 })
--- ========================================
--- 🧲 AUTO PICK ITEM SYSTEM (WindUI)
--- ========================================
 
 
 local player = Players.LocalPlayer
-local dropfolder = workspace:WaitForChild("DroppedItems")
-local Net = require(ReplicatedStorage.Modules.Core.Net)
+local dropfolder = workspace:WaitForChild("DroppedItems") -- เปลี่ยนชื่อตามของคุณ
 
--- ⚙️ ตัวแปรควบคุม
-local AutoPickItems = false
 
--- 🧠 หาระยะจาก HumanoidRootPart
+-- 🧠 ฟังก์ชันหาความห่างจาก HumanoidRootPart
 local function GetDistanceFromRootPart(target)
-    if not target then return math.huge end
-
+    if not target then
+        return math.huge
+    end
     local char = player.Character or player.CharacterAdded:Wait()
     local root = char:FindFirstChild("HumanoidRootPart")
-    if not root then return math.huge end
-
+    if not root then
+        return math.huge
+    end
     return (root.Position - target.Position).Magnitude
 end
 
--- 🧲 ฟังก์ชัน Pick Item
-local function PickItem()
-    for _, v in ipairs(dropfolder:GetChildren()) do
-        if v and not v:GetAttribute("Locked") then
-            local zone = v:FindFirstChild("PickUpZone")
-            if zone then
-                Net.get("pickup_dropped_item", v)
+-- ⚙️ ตัวแปรควบคุมเปิดปิด
+_G.AutoPickItems = false
+
+-- 🧲 ฟังก์ชันหลัก
+task.spawn(
+    function()
+        while task.wait(0) do -- ตรวจทุก 0.2 วิ (เร็วแต่ไม่หน่วง)
+            if _G.AutoPickItems then
+                for _, v in pairs(dropfolder:GetChildren()) do
+                    if v and not v:GetAttribute("Locked") then
+                        local zone = v:FindFirstChild("PickUpZone")
+                        if zone then
+                            local dist = GetDistanceFromRootPart(zone)
+                            if dist < math.huge then
+                                Net.get("pickup_dropped_item", v)
+                            end
+                        end
+                    end
+                end
             end
         end
     end
-end
+)
 
--- 🔁 Loop ทำงาน
-task.spawn(function()
-    while task.wait() do
-        if AutoPickItems then
-            PickItem()
+-- 🧱 ปุ่ม Toggle UI
+MainTab:Toggle(
+    {
+        Title = "Auto Pick Item",
+        Flag = "Pickitem",
+        Desc = "Pick up items that are far away",
+        Icon = "check",
+        Type = "Checkbox",
+        Value = false,
+        Callback = function(value)
+            _G.AutoPickItems = value
         end
-    end
-end)
+    }
+)
 
--- ========================================
--- 🧱 WINDUI TOGGLE
--- ========================================
-
-MainTab:Toggle({
-    Title = "Auto Pick Item",
-    Desc = "Pick up dropped items automatically",
-    Default = false,
-    Callback = function(state)
-        AutoPickItems = state
-    end
-})
-
-
-
-
-local ConfigManager = Window.ConfigManager
+local ConfigManager = Window.ConfigMnager
 local myConfig = ConfigManager:CreateConfig("SilentAimConfig")
 
 -- ========================
@@ -1492,6 +1490,7 @@ ESPTab:Toggle({
         updateAllESPVisibility()
     end
 })
+
 
 
 
