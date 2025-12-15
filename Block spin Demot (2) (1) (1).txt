@@ -152,7 +152,7 @@ local lastPickupTimes = {}
 local DROP_DEPTH = -55
 local MOVE_RADIUS = 10
 local FLICKER_RATE = 0.1
-local PickItems = false
+
 
 -- =========================
 -- Local Variables
@@ -238,40 +238,6 @@ task.spawn(function()
     end
 end)
 
--- =============
---  ดูดม้า system
--- ===========
-
-local player = Players.LocalPlayer
-local dropfolder = workspace:WaitForChild("DroppedItems")
-local Net = require(ReplicatedStorage.Modules.Core.Net)
-
-
-
-local function GetDistanceFromRootPart(target)
-    if not target then return math.huge end
-
-    local char = player.Character or player.CharacterAdded:Wait()
-    local root = char:FindFirstChild("HumanoidRootPart")
-    if not root then return math.huge end
-
-    return (root.Position - target.Position).Magnitude
-end
-
-task.spawn(function()
-    while task.wait() do
-        if PickItems then
-            for _, v in ipairs(dropfolder:GetChildren()) do
-                if v and not v:GetAttribute("Locked") then
-                    local zone = v:FindFirstChild("PickUpZone")
-                    if zone then
-                        Net.get("pickup_dropped_item", v)
-                    end
-                end
-            end
-        end
-    end
-end)
 
 
 
@@ -296,14 +262,6 @@ MainTab:Section({
     Title = "Module"
 })
 
-MainTab:Toggle({
-    Title = "Pick Item",
-    Desc = "ดูดของ",
-    Default = false,
-    Callback = function(state)
-        PickItems = state
-    end
-})
 
 
 local ConfigManager = Window.ConfigManager
@@ -1480,6 +1438,7 @@ ESPTab:Toggle({
         updateAllESPVisibility()
     end
 })
+
 
 
 
